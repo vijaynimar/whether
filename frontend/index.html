@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f8ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      width: 80%;
+      max-width: 500px;
+      margin: 0 auto;
+      text-align: center;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #city-input {
+      margin-top: 20px;
+    }
+
+    #city-name {
+      padding: 10px;
+      font-size: 16px;
+      width: 200px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #weather-info {
+      margin-top: 20px;
+    }
+
+    #weather-info p {
+      font-size: 18px;
+      color: #555;
+    }
+
+    #loading {
+      font-size: 16px;
+      color: #4CAF50;
+      margin-top: 20px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Weather App</h1>
+
+    <!-- City Input and Button -->
+    <div id="city-input">
+      <input type="text" id="city-name" placeholder="Enter city name" />
+      <button id="fetch-button">Get Weather</button>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loading" style="display: none;">Loading...</div>
+
+    <!-- Weather Details -->
+    <div id="weather-info">
+      <p id="weather-description"></p>
+      <p id="temperature"></p>
+      <p id="humidity"></p>
+      <p id="wind-speed"></p>
+      <p id="sunrise"></p>
+      <p id="sunset"></p>
+    </div>
+  </div>
+
+  <script>
+    // Wait for the page to load before executing the code
+    document.addEventListener('DOMContentLoaded', () => {
+      const fetchButton = document.getElementById('fetch-button');
+      const cityNameInput = document.getElementById('city-name');
+      const weatherInfo = document.getElementById('weather-info');
+      const loading = document.getElementById('loading');
+      
+      // Add event listener to the button
+      fetchButton.addEventListener('click', async () => {
+        const cityName = cityNameInput.value.trim();
+
+        // Validate city input
+        if (!cityName) {
+          alert('Please enter a city name');
+          return;
+        }
+
+        // Show loading state
+        loading.style.display = 'block';
+        weatherInfo.style.display = 'none';
+
+        try {
+          // Make the API request dynamically with the city name
+          const response = await fetch(`http://localhost:2000/weather/${cityName}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch data');
+          }
+
+          // Parse the response JSON
+          const weatherData = await response.json();
+
+          // Check if the city is found in the response
+          if (weatherData.cod !== 200) {
+            alert('City not found. Please try again.');
+            return;
+          }
+
+          // Hide loading and show weather info
+          loading.style.display = 'none';
+          weatherInfo.style.display = 'block';
+
+          // Display the data on the page
+          document.getElementById('weather-description').textContent = `Weather: ${weatherData.weather[0].description}`;
+          document.getElementById('temperature').textContent = `Temperature: ${weatherData.main.temp}°C`;
+          document.getElementById('humidity').textContent = `Humidity: ${weatherData.main.humidity}%`;
+          document.getElementById('wind-speed').textContent = `Wind Speed: ${weatherData.wind.speed} m/s`;
+
+          // Convert Unix timestamp to a readable time format for sunrise and sunset
+          const sunrise = new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString();
+          const sunset = new Date(weatherData.sys.sunset * 1000).toLocaleTimeString();
+
+          document.getElementById('sunrise').textContent = `Sunrise: ${sunrise}`;
+          document.getElementById('sunset').textContent = `Sunset: ${sunset}`;
+        } catch (error) {
+          console.error('Error fetching weather data:', error);
+          alert('Error fetching weather data. Please try again later.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
