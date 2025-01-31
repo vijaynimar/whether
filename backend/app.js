@@ -15,19 +15,21 @@ const API_key = "046e4ae7b88754a3b86a433ac04ee61c"; // OpenWeatherMap API key
 app.get("/weather/:city", async (req, res) => {
     const city = req.params.city;
 
-    // Check if the city data is already cached in Redis
     const cachedData = await red.get(city);
+    const cached=JSON.parse(cachedData)
     if (cachedData) {
+        if(cached.date==new Date().toLocaleDateString('en-GB')){
+          
         return res.send(JSON.parse(cachedData)); // Send cached data if available
+        }else{
+            await red.del(city)
+        }
     }
 
-    // If not cached, fetch new data from OpenWeatherMap API
     const data = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_key}&units=metric`)
         .then((response) => response.json());
-
-    // Cache the data in Redis with the city as the key
+        data.date= new Date().toLocaleDateString('en-GB');
     await red.set(city, JSON.stringify(data));
-
     // Return the weather data
     res.status(200).json(data);
 });
